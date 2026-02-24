@@ -2,38 +2,61 @@
 
 namespace MiniGestorTareas.Models;
 
-public class Tarea
+public class Tarea : IValidatableObject
 {
     public int Id { get; set; }
 
-    [Required]
-    [StringLength(80, MinimumLength = 3)]
+    [Required(ErrorMessage = "El título es obligatorio.")]
+    [StringLength(80, MinimumLength = 3, ErrorMessage = "El título debe tener entre 3 y 80 caracteres.")]
     public string Title { get; set; } = string.Empty;
 
-    [StringLength(200)]
+    [StringLength(200, ErrorMessage = "La descripción no puede superar 200 caracteres.")]
     public string? Description { get; set; }
 
-    [Required]
+    [Required(ErrorMessage = "La prioridad es obligatoria.")]
     public Priority Priority { get; set; }
 
+    // Siempre se crea en Pending
     public Status Status { get; set; } = Status.Pending;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     [DataType(DataType.Date)]
     public DateTime? DueDate { get; set; }
+
+    // Validación personalizada
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (DueDate.HasValue && DueDate.Value.Date < DateTime.Today)
+        {
+            yield return new ValidationResult(
+                "La fecha objetivo no puede ser anterior a hoy.",
+                new[] { nameof(DueDate) }
+            );
+        }
+    }
 }
 
 public enum Priority
 {
-    Low,
-    Medium,
-    High
+    [Display(Name = "Baja")]
+    Low = 0,
+
+    [Display(Name = "Media")]
+    Medium = 1,
+
+    [Display(Name = "Alta")]
+    High = 2
 }
 
 public enum Status
 {
-    Pending,
-    InProgress,
-    Done
+    [Display(Name = "Pendiente")]
+    Pending = 0,
+
+    [Display(Name = "En progreso")]
+    InProgress = 1,
+
+    [Display(Name = "Completada")]
+    Done = 2
 }

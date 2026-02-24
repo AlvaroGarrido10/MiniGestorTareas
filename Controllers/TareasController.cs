@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniGestorTareas.Data;
 using MiniGestorTareas.Models;
@@ -22,23 +17,20 @@ namespace MiniGestorTareas.Controllers
         // GET: Tareas
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Tareas.ToListAsync());
+            var tareas = await _context.Tareas.ToListAsync();
+            return View(tareas);
         }
 
         // GET: Tareas/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
-            var tarea = await _context.Tareas
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var tarea = await _context.Tareas.FirstOrDefaultAsync(t => t.Id == id);
+
             if (tarea == null)
-            {
                 return NotFound();
-            }
 
             return View(tarea);
         }
@@ -50,86 +42,74 @@ namespace MiniGestorTareas.Controllers
         }
 
         // POST: Tareas/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Description,Priority,Status,CreatedAt,DueDate")] Tarea tarea)
+        public async Task<IActionResult> Create([Bind("Title,Description,Priority,DueDate")] Tarea tarea)
         {
-            if (ModelState.IsValid)
-            {
-                _context.Add(tarea);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(tarea);
+            if (!ModelState.IsValid)
+                return View(tarea);
+
+            tarea.CreatedAt = DateTime.UtcNow;
+            tarea.Status = Status.Pending;
+
+            _context.Add(tarea);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Tareas/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var tarea = await _context.Tareas.FindAsync(id);
+
             if (tarea == null)
-            {
                 return NotFound();
-            }
+
             return View(tarea);
         }
 
         // POST: Tareas/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,Priority,Status,CreatedAt,DueDate")] Tarea tarea)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,Priority,Status,DueDate")] Tarea tarea)
         {
             if (id != tarea.Id)
-            {
                 return NotFound();
-            }
 
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(tarea);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!TareaExists(tarea.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(tarea);
+            if (!ModelState.IsValid)
+                return View(tarea);
+
+            var tareaDb = await _context.Tareas.FindAsync(id);
+
+            if (tareaDb == null)
+                return NotFound();
+
+            // Actualizamos solo campos editables
+            tareaDb.Title = tarea.Title;
+            tareaDb.Description = tarea.Description;
+            tareaDb.Priority = tarea.Priority;
+            tareaDb.Status = tarea.Status;
+            tareaDb.DueDate = tarea.DueDate;
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Tareas/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
-            var tarea = await _context.Tareas
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var tarea = await _context.Tareas.FirstOrDefaultAsync(t => t.Id == id);
+
             if (tarea == null)
-            {
                 return NotFound();
-            }
 
             return View(tarea);
         }
@@ -140,18 +120,14 @@ namespace MiniGestorTareas.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var tarea = await _context.Tareas.FindAsync(id);
+
             if (tarea != null)
             {
                 _context.Tareas.Remove(tarea);
+                await _context.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool TareaExists(int id)
-        {
-            return _context.Tareas.Any(e => e.Id == id);
         }
     }
 }
