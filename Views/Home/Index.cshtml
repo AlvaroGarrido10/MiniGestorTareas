@@ -1,49 +1,12 @@
-﻿@model IEnumerable<MiniGestorTareas.Models.Tarea>
-
-@{
-    ViewData["Title"] = "Tareas";
+﻿@{
+    ViewData["Title"] = "Inicio";
 }
 
-<h1>Tareas</h1>
+<div class="text-center">
+    <h1 class="display-4">Mini gestor de tareas</h1>
+    <p>Aplicación MVC con Entity Framework Core y SQLite para gestionar tareas personales.</p>
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Crear nueva</a>
-</p>
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>Id</th>
-            <th>Título</th>
-            <th>Descripción</th>
-            <th>Estado</th>
-            <th>Prioridad</th>
-            <th>Fecha creación</th>
-            <th>Fecha objetivo</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.Id</td>
-                <td>@item.Title</td>
-                <td>
-                    @(item.Description != null && item.Description.Length > 50
-                        ? item.Description.Substring(0, 50) + "..."
-                        : item.Description)
-                </td>
-                <td>@item.Status</td>
-                <td>@item.Priority</td>
-                <td>@item.CreatedAt</td>
-                <td>@(item.DueDate?.ToString("yyyy-MM-dd") ?? "-")</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id">Editar</a> |
-                    <a asp-action="Details" asp-route-id="@item.Id">Detalle</a> |
-                    <a asp-action="Delete" asp-route-id="@item.Id">Eliminar</a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+    <a class="btn btn-primary" asp-controller="Tareas" asp-action="Index">
+        Ir al listado de tareas
+    </a>
+</div>

@@ -28,7 +28,6 @@
         {
             <tr>
                 <td>@item.Id</td>
-
                 <td>@item.Title</td>
 
                 <td>
@@ -41,11 +40,11 @@
                 </td>
 
                 <td>
-                    @if (item.Status == Status.Pending)
+                    @if (item.Status == MiniGestorTareas.Models.Status.Pending)
                     {
                         <span class="badge bg-secondary">Pendiente</span>
                     }
-                    else if (item.Status == Status.InProgress)
+                    else if (item.Status == MiniGestorTareas.Models.Status.InProgress)
                     {
                         <span class="badge bg-warning text-dark">En progreso</span>
                     }
@@ -56,11 +55,11 @@
                 </td>
 
                 <td>
-                    @if (item.Priority == Priority.High)
+                    @if (item.Priority == MiniGestorTareas.Models.Priority.High)
                     {
                         <span class="text-danger fw-bold">Alta</span>
                     }
-                    else if (item.Priority == Priority.Medium)
+                    else if (item.Priority == MiniGestorTareas.Models.Priority.Medium)
                     {
                         <span class="text-warning fw-bold">Media</span>
                     }
@@ -72,11 +71,7 @@
 
                 <td>@item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
 
-                <td>
-                    @(item.DueDate.HasValue
-                        ? item.DueDate.Value.ToString("dd/MM/yyyy")
-                        : "-")
-                </td>
+                <td>@(item.DueDate.HasValue? item.DueDate.Value.ToString("dd/MM/yyyy") : "-")</td>
 
                 <td>
                     <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm">Detalle</a>
