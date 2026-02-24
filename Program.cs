@@ -11,6 +11,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 var app = builder.Build();
 
+// ✅ Migraciones + Seed al arrancar
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    context.Database.Migrate();        // asegura DB y migraciones aplicadas
+    DbInitializer.Seed(context);       // mete datos si está vacío
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {

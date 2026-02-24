@@ -14,81 +14,79 @@ namespace MiniGestorTareas.Controllers
             _context = context;
         }
 
-        // GET: Tareas
-        public async Task<IActionResult> Index()
+        // LISTADO + BÚSQUEDA + FILTROS
+        public async Task<IActionResult> Index(string? q, Status? status, Priority? priority)
         {
-            var tareas = await _context.Tareas.ToListAsync();
-            return View(tareas);
+            var query = _context.Tareas.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(q))
+                query = query.Where(t => t.Title.Contains(q));
+
+            if (status.HasValue)
+                query = query.Where(t => t.Status == status.Value);
+
+            if (priority.HasValue)
+                query = query.Where(t => t.Priority == priority.Value);
+
+            ViewData["q"] = q;
+            ViewData["status"] = status;
+            ViewData["priority"] = priority;
+
+            return View(await query.ToListAsync());
         }
 
-        // GET: Tareas/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-                return NotFound();
+            if (id == null) return NotFound();
 
-            var tarea = await _context.Tareas.FirstOrDefaultAsync(t => t.Id == id);
-
-            if (tarea == null)
-                return NotFound();
+            var tarea = await _context.Tareas.FirstOrDefaultAsync(m => m.Id == id);
+            if (tarea == null) return NotFound();
 
             return View(tarea);
         }
 
-        // GET: Tareas/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Tareas/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Title,Description,Priority,DueDate")] Tarea tarea)
+        public async Task<IActionResult> Create(Tarea tarea)
         {
-            if (!ModelState.IsValid)
-                return View(tarea);
-
-            tarea.CreatedAt = DateTime.UtcNow;
-            tarea.Status = Status.Pending;
-
-            _context.Add(tarea);
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction(nameof(Index));
-        }
-
-        // GET: Tareas/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-                return NotFound();
-
-            var tarea = await _context.Tareas.FindAsync(id);
-
-            if (tarea == null)
-                return NotFound();
+            if (ModelState.IsValid)
+            {
+                tarea.CreatedAt = DateTime.UtcNow;
+                _context.Add(tarea);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
 
             return View(tarea);
         }
 
-        // POST: Tareas/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var tarea = await _context.Tareas.FindAsync(id);
+            if (tarea == null) return NotFound();
+
+            return View(tarea);
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,Priority,Status,DueDate")] Tarea tarea)
+        public async Task<IActionResult> Edit(int id, Tarea tarea)
         {
-            if (id != tarea.Id)
-                return NotFound();
+            if (id != tarea.Id) return NotFound();
 
             if (!ModelState.IsValid)
                 return View(tarea);
 
             var tareaDb = await _context.Tareas.FindAsync(id);
+            if (tareaDb == null) return NotFound();
 
-            if (tareaDb == null)
-                return NotFound();
-
-            // Actualizamos solo campos editables
             tareaDb.Title = tarea.Title;
             tareaDb.Description = tarea.Description;
             tareaDb.Priority = tarea.Priority;
@@ -96,25 +94,19 @@ namespace MiniGestorTareas.Controllers
             tareaDb.DueDate = tarea.DueDate;
 
             await _context.SaveChangesAsync();
-
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Tareas/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-                return NotFound();
+            if (id == null) return NotFound();
 
-            var tarea = await _context.Tareas.FirstOrDefaultAsync(t => t.Id == id);
-
-            if (tarea == null)
-                return NotFound();
+            var tarea = await _context.Tareas.FirstOrDefaultAsync(m => m.Id == id);
+            if (tarea == null) return NotFound();
 
             return View(tarea);
         }
 
-        // POST: Tareas/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

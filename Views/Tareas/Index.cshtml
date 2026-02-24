@@ -6,6 +6,37 @@
 
 <h1>Listado de tareas</h1>
 
+<form method="get" class="row g-2 align-items-center mb-3">
+
+    <div class="col-auto">
+        <input type="text"
+               name="q"
+               value="@(ViewData["q"] as string)"
+               class="form-control"
+               placeholder="Buscar por título..." />
+    </div>
+
+    <div class="col-auto">
+        <select name="status" class="form-select"
+                asp-items="Html.GetEnumSelectList<MiniGestorTareas.Models.Status>()">
+            <option value="">-- Estado (todos) --</option>
+        </select>
+    </div>
+
+    <div class="col-auto">
+        <select name="priority" class="form-select"
+                asp-items="Html.GetEnumSelectList<MiniGestorTareas.Models.Priority>()">
+            <option value="">-- Prioridad (todas) --</option>
+        </select>
+    </div>
+
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-primary">Filtrar</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
+    </div>
+
+</form>
+
 <p>
     <a asp-action="Create" class="btn btn-success">+ Nueva tarea</a>
 </p>
@@ -39,35 +70,9 @@
                     @corta
                 </td>
 
-                <td>
-                    @if (item.Status == MiniGestorTareas.Models.Status.Pending)
-                    {
-                        <span class="badge bg-secondary">Pendiente</span>
-                    }
-                    else if (item.Status == MiniGestorTareas.Models.Status.InProgress)
-                    {
-                        <span class="badge bg-warning text-dark">En progreso</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-success">Completada</span>
-                    }
-                </td>
+                <td>@Html.DisplayFor(modelItem => item.Status)</td>
 
-                <td>
-                    @if (item.Priority == MiniGestorTareas.Models.Priority.High)
-                    {
-                        <span class="text-danger fw-bold">Alta</span>
-                    }
-                    else if (item.Priority == MiniGestorTareas.Models.Priority.Medium)
-                    {
-                        <span class="text-warning fw-bold">Media</span>
-                    }
-                    else
-                    {
-                        <span class="text-success fw-bold">Baja</span>
-                    }
-                </td>
+                <td>@Html.DisplayFor(modelItem => item.Priority)</td>
 
                 <td>@item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
 
