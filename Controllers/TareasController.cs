@@ -14,11 +14,16 @@ namespace MiniGestorTareas.Controllers
             _context = context;
         }
 
-        // LISTADO + BÚSQUEDA + FILTROS
-        public async Task<IActionResult> Index(string? q, Status? status, Priority? priority)
+        // LISTADO + BÚSQUEDA + FILTROS + ORDENACIÓN + PAGINACIÓN
+        public async Task<IActionResult> Index(string? q, Status? status, Priority? priority, string? sort, int page = 1)
         {
+            const int pageSize = 10;
+
+            if (page < 1) page = 1;
+
             var query = _context.Tareas.AsQueryable();
 
+            // Filtros
             if (!string.IsNullOrWhiteSpace(q))
                 query = query.Where(t => t.Title.Contains(q));
 
@@ -28,11 +33,48 @@ namespace MiniGestorTareas.Controllers
             if (priority.HasValue)
                 query = query.Where(t => t.Priority == priority.Value);
 
+            // Ordenación
+            sort = string.IsNullOrWhiteSpace(sort) ? "created_desc" : sort;
+
+            query = sort switch
+            {
+                "priority_desc" => query.OrderByDescending(t => t.Priority),
+                "priority_asc" => query.OrderBy(t => t.Priority),
+
+                "duedate_asc" => query
+                    .OrderBy(t => t.DueDate == null)
+                    .ThenBy(t => t.DueDate),
+
+                "duedate_desc" => query
+                    .OrderBy(t => t.DueDate == null)
+                    .ThenByDescending(t => t.DueDate),
+
+                _ => query.OrderByDescending(t => t.CreatedAt)
+            };
+
+            // Paginación (antes del ToListAsync)
+            var totalItems = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+            if (totalPages == 0) totalPages = 1;
+            if (page > totalPages) page = totalPages;
+
+            var tareas = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            // Mantener valores para la vista
             ViewData["q"] = q;
             ViewData["status"] = status;
             ViewData["priority"] = priority;
+            ViewData["sort"] = sort;
 
-            return View(await query.ToListAsync());
+            ViewData["page"] = page;
+            ViewData["totalPages"] = totalPages;
+            ViewData["totalItems"] = totalItems;
+
+            return View(tareas);
         }
 
         public async Task<IActionResult> Details(int? id)
